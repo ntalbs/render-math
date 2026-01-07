@@ -24,6 +24,12 @@ const blogRoot = '/Users/ntalbs/Blog';
 const publicDir = path.join(blogRoot, 'public');
 const cacheFile = path.join(blogRoot, 'mathjax3', 'math-cache.json');
 const silent = true; // print only RENDER message
+const stat = {
+  directories: 0,
+  rendered: 0,
+  copied: 0,
+  skipped: 0
+};
 
 const files = glob.sync(`${publicDir}/**/*`);
 
@@ -38,18 +44,25 @@ files.forEach(f => process(f));
 
 fs.writeFileSync(cacheFile, JSON.stringify(cache, null, 2));
 
+stat.total = stat.directories + stat.rendered + stat.copied + stat.skipped;
+console.log(pc.bold(pc.yellow('> Completed.')), stat);
+
+
+
 function process(sourcePath) {
   let targetPath = getTargetPathFrom(sourcePath);
 
   let sourcePathStat = fs.statSync(sourcePath);
   if (sourcePathStat.isDirectory()) {
     ensureDir(targetPath);
+    stat.directories++;
   } else {
     if (sourcePath.endsWith('.md5')) {
       return;
     }
 
     if (isSrcNotChanged(sourcePath)) {
+      stat.skipped ++;
       if (!silent) {
         console.log(pc.bold(pc.green('SKIP:')), targetPath);
       }
@@ -60,6 +73,7 @@ function process(sourcePath) {
     if (sourcePath.endsWith('.html')) {
       processHtml(sourcePath, targetPath);
     } else {
+      stat.copied++;
       if (!silent) {
         console.log(pc.bold(pc.yellow('COPY:')), sourcePath);
       }
@@ -98,9 +112,11 @@ function processHtml(sourcePath, targetPath) {
     styleTag.innerHTML = adaptor.innerHTML(svg.styleSheet(mjPage));
     document.head.appendChild(styleTag);
     fs.writeFileSync(targetPath, dom.serialize());
+    stat.rendered++;
     console.log(pc.bold(pc.red('RENDER:')), sourcePath);
   } else {
     fs.copyFileSync(sourcePath, targetPath);
+    stat.copied++;
     if (!silent) {
       console.log(pc.bold(pc.yellow('COPY:')), sourcePath);
     }
