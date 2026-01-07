@@ -1,6 +1,10 @@
+#!/usr/bin/env node
+
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const glob = require('glob');
+const pc = require('picocolors');
 const { JSDOM } = require('jsdom');
 const { mathjax } = require('mathjax-full/js/mathjax.js');
 const { TeX } = require('mathjax-full/js/input/tex.js');
@@ -18,12 +22,20 @@ const mjPage = mathjax.document('', { InputJax: tex, OutputJax: svg });
 
 const blogRoot = '/Users/ntalbs/Blog';
 const publicDir = path.join(blogRoot, 'public');
-const htmlFiles = glob.sync(`${publicDir}/**/*`);
+const cacheFile = path.join(blogRoot, 'mathjax3', 'math-cache.json');
 
-console.log(`Found ${htmlFiles.length} HTML files. Processing math...`);
+const files = glob.sync(`${publicDir}/**/*`);
 
-htmlFiles.forEach(f => process(f));
+console.log(pc.yellow(`> Found ${files.length} files to process. Start processing ...`));
 
+let cache = {};
+if (fs.existsSync(cacheFile)) {
+  cache = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
+}
+
+files.forEach(f => process(f));
+
+fs.writeFileSync(cacheFile, JSON.stringify(cache, null, 2));
 
 function process(sourcePath) {
   let targetPath = getTargetPathFrom(sourcePath);
@@ -36,8 +48,8 @@ function process(sourcePath) {
       return;
     }
 
-    if (!isSrcNewer(sourcePath, targetPath)) {
-      console.log(`${targetPath} is up-to-date.`);
+    if (isSrcNotChanged(sourcePath)) {
+      console.log(pc.bold(pc.green('SKIP:')), targetPath);
       return;
     }
 
@@ -45,21 +57,24 @@ function process(sourcePath) {
     if (sourcePath.endsWith('.html')) {
       processHtml(sourcePath, targetPath);
     } else {
-      console.log(`copying ${sourcePath}`);
+      console.log(pc.bold(pc.yellow('COPY:')), sourcePath);
       fs.copyFileSync(sourcePath, targetPath);
     }
   }
 }
 
-function isSrcNewer(src, target) {
-  if (!fs.existsSync(target)) {
-    return true;
+function isSrcNotChanged(src) {
+  let newMd5 = md5(src);
+  let same = cache[src] === newMd5;
+  if (!same) {
+    cache[src] = newMd5;
   }
+  return same;
+}
 
-  const statSrc = fs.statSync(src);
-  const statTarget = fs.statSync(target);
-
-  return statSrc.mtimeMs > statTarget.mtimeMs;
+function md5(src) {
+  let content = fs.readFileSync(src)
+  return crypto.createHash('md5').update(content).digest('hex');
 }
 
 function processHtml(sourcePath, targetPath) {
@@ -78,10 +93,10 @@ function processHtml(sourcePath, targetPath) {
     styleTag.innerHTML = adaptor.innerHTML(svg.styleSheet(mjPage));
     document.head.appendChild(styleTag);
     fs.writeFileSync(targetPath, dom.serialize());
-    console.log(`✅ Rendered math in: ${path.relative(publicDir, sourcePath)}`);
+    console.log(pc.bold(pc.red('RENDER:')), sourcePath);
   } else {
     fs.copyFileSync(sourcePath, targetPath);
-    conslog.log(`No math in ${sourcePath}, copied.`);
+    console.log(pc.bold(pc.yellow('COPY:')), sourcePath);
   }
 
   function processNode(node) {
@@ -112,7 +127,7 @@ function processHtml(sourcePath, targetPath) {
         wrapper.innerHTML = text;
         node.replaceWith(...wrapper.childNodes);
       }
-    } else if (node.className === 'latex-block') {
+    } else if (node.className === 'latex-block') { // div.latex-block by org-mode
       needsUpdate = true;
 
       let texStr = node.textContent;
