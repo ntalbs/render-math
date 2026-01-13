@@ -1,15 +1,33 @@
 {
   "name": "math-renderer",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "version": "0.1.0",
+  "description": "CLI tool that render maths with MathJax",
+  "keywords": [
+    "math",
+    "mathjax",
+    "latex",
+    "tex",
+    "formula"
+  ],
+  "homepage": "https://github.com/ntalbs/math-renderer/#readme",
+  "bugs": {
+    "url": "https://github.com/ntalbs/math-renderer/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ntalbs/math-renderer.git"
+  },
+  "license": "ISC",
+  "author": "ntalbs",
+  "type": "module",
+  "main": "src/index.js",
+  "bin": {
+    "render-math": "./src/index.js"
+  },
   "scripts": {
+    "lint": "eslint .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "module",
   "dependencies": {
     "chalk": "^5.6.2",
     "commander": "^14.0.2",
@@ -17,5 +35,8 @@
     "glob": "^13.0.0",
     "jsdom": "^27.4.0",
     "mathjax-full": "^3.2.1"
+  },
+  "devDependencies": {
+    "eslint": "^9.39.2"
   }
 }
