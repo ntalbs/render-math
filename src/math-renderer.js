@@ -149,7 +149,7 @@ export function render(src, target, options) {
     function processNode(node) {
       // Regex for $$...$$ and $...$
       const displayRegex = /\$\$(.*?)\$\$/gs;
-      const inlineRegex = /(?<!\\)\$([^\$]+?)\$/g;
+      const inlineRegex = /(?<!\\)\$([^$]+?)\$/g;
 
       if (node.nodeType === 3) { // Text node
         let text = node.textContent;
