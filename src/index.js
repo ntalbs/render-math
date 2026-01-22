@@ -2,9 +2,11 @@
 
 import { program } from 'commander';
 import { render } from './math-renderer.js';
+import pkg from '../package.json' with { type: 'json' };
 
 program
   .description('MathJax renderer. Read HTML and render math formula to SVG.')
+  .version(pkg.version)
   .option('--src-dir <path>', 'source directory', `${process.env.BLOG_BASE_DIR}/public`)
   .option('--dest-dir <path>', 'destination directory', `${process.env.BLOG_BASE_DIR}/rendered-public`)
   .option('-f, --force', 'force render')
