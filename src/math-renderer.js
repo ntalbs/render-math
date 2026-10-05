@@ -33,7 +33,7 @@ export function render(src, target, options) {
   };
 
 
-  const files = glob.sync(`${src}/**/*`);
+  const files = glob.sync(`${src}/**/*`, { dot: true });
 
   console.log(chalk.yellow.bold('> Start processing:'), `Found ${files.length} files ...`);
   files.forEach(f => process(f));
