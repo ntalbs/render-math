@@ -1,6 +1,6 @@
 {
   "name": "render-math",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "CLI tool that render maths with MathJax",
   "keywords": [
     "math",
@@ -32,7 +32,7 @@
     "chalk": "^5.6.2",
     "commander": "^14.0.2",
     "cripto": "^1.1.4",
-    "glob": "^13.0.0",
+    "glob": "^14.0.6",
     "jsdom": "^27.4.0",
     "mathjax-full": "^3.2.1"
   },
