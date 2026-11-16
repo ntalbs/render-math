@@ -148,8 +148,8 @@ export function render(src, target, options) {
 
     function processNode(node) {
       // Regex for $$...$$ and $...$
-      const displayRegex = /\$\$(.*?)\$\$/gs;
-      const inlineRegex = /(?<!\\)\$([^$]+?)\$/g;
+      const displayRegex = /(?:\$\$([\s\S]*?)\$\$|\\\[([\s\S]*?)\\\])/gs;
+      const inlineRegex = /(?<!\\)(?:\$([^$]+?)\$|\\\(([\s\S]+?)\\\))/g;
 
       if (node.nodeType === 3) { // Text node
         let text = node.textContent;
@@ -157,15 +157,17 @@ export function render(src, target, options) {
           needsUpdate = true;
 
           // Render Display Math
-          text = text.replace(displayRegex, (_, texStr) => {
-            const output = mjPage.convert(texStr, { display: true });
+          text = text.replace(displayRegex, (_, wrappedWithDollar, wrappedWithBracket) => {
+            const mathText = !! wrappedWithDollar ? wrappedWithDollar : wrappedWithBracket;
+            const output = mjPage.convert(mathText, { display: true });
             const svg = adaptor.innerHTML(output);
             return `<mjx-container display="true" style="display: block; text-align: center; margin: 1em 0;">${svg}</mjx-container>`;
           });
 
           // Render Inline Math
-          text = text.replace(inlineRegex, (_, texStr) => {
-            const output = mjPage.convert(texStr, { display: false });
+          text = text.replace(inlineRegex, (_, wrappedWithDollar, wrappedWithParen) => {
+            const mathText = !! wrappedWithDollar ? wrappedWithDollar : wrappedWithParen;
+            const output = mjPage.convert(mathText, { display: false });
             return adaptor.innerHTML(output);
           });
 
